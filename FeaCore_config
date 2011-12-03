@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.7
-# Sat Dec  3 02:31:48 2011
+# Sun Dec  4 00:07:11 2011
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1189,7 +1189,7 @@ CONFIG_WLAN=y
 # CONFIG_B43LEGACY_DMA_AND_PIO_MODE is not set
 # CONFIG_B43LEGACY_DMA_MODE is not set
 # CONFIG_B43LEGACY_PIO_MODE is not set
-CONFIG_BROADCOM_WIFI=m
+CONFIG_BROADCOM_WIFI=y
 # CONFIG_BROADCOM_WIFI_RESERVED_MEM is not set
 # CONFIG_HOSTAP is not set
 
