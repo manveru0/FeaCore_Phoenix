@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.7
-# Sun Dec  4 22:17:53 2011
+# Mon Dec  5 00:04:07 2011
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -2494,7 +2494,7 @@ CONFIG_SUNRPC=y
 # CONFIG_RPCSEC_GSS_SPKM3 is not set
 # CONFIG_SMB_FS is not set
 # CONFIG_CEPH_FS is not set
-CONFIG_CIFS=m
+CONFIG_CIFS=y
 CONFIG_CIFS_STATS=y
 CONFIG_CIFS_STATS2=y
 CONFIG_CIFS_WEAK_PW_HASH=y
