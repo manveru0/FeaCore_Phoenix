@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.7
-# Thu Dec  8 01:33:56 2011
+# Fri Dec  9 19:58:31 2011
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1500,10 +1500,9 @@ CONFIG_POWER_SUPPLY=y
 # CONFIG_BATTERY_BQ27x00 is not set
 # CONFIG_BATTERY_MAX17040 is not set
 CONFIG_MAX17043_FUEL_GAUGE=y
-CONFIG_BATTERY_MSM=m
+# CONFIG_BATTERY_MSM is not set
 CONFIG_BATTERY_ARIESVE=y
 # CONFIG_SMB137B_CHARGER is not set
-# CONFIG_BATTERY_MSM_FAKE is not set
 # CONFIG_PM8058_FIX_USB is not set
 CONFIG_HWMON=y
 # CONFIG_HWMON_VID is not set
