@@ -1949,15 +1949,6 @@ msmsdcc_runtime_suspend(struct device *dev)
 		return 0;
 	}
 
-	if(host->pdev_id == 4)
-	 {
-		  rc = pm8058_gpio_config(24, &sd_pwr_en_n_1); //SD_PWR_EN
-		  if (rc) {
-			  pr_err("%s PMIC_GPIO_SD_PWR_EN_N config failed\n", __func__);
-			  return rc;
-		  }
-		  gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(24), 1); //HIGH
-	  }
 
 
 
@@ -2006,6 +1997,15 @@ msmsdcc_runtime_suspend(struct device *dev)
 		host->sdcc_suspending = 0;
 		mmc->suspend_task = NULL;
 	}
+	if(host->pdev_id == 4)
+	 {
+		  rc = pm8058_gpio_config(24, &sd_pwr_en_n_1); //SD_PWR_EN
+		  if (rc) {
+			  pr_err("%s PMIC_GPIO_SD_PWR_EN_N config failed\n", __func__);
+			  return rc;
+		  }
+		  gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(24), 1); //HIGH
+	  }
 	return rc;
 }
 
@@ -2037,25 +2037,27 @@ msmsdcc_runtime_resume(struct device *dev)
 
 	if(host->pdev_id == 4)
 	 {
+#if 1
 	 	  if(gpio_get_value(nT_FLASH_DET))
 	 	  {
-			  rc = pm8058_gpio_config(24, &sd_pwr_en_n_1); //SD_PWR_EN
-			  if (rc) {
-				  pr_err("%s PMIC_GPIO_SD_PWR_EN_N config failed\n", __func__);
-				  return rc;
-		  	}
-		  	gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(24), 1); //Low Active
+
+		 	rc = gpio_tlmm_config(GPIO_CFG(58, 1, GPIO_CFG_OUTPUT,GPIO_CFG_PULL_DOWN, GPIO_CFG_16MA), GPIO_CFG_ENABLE);		
+			if (rc) printk(KERN_ERR"MMC CLK PD ERROR \n");		
 	 	  
 	 	  }
 		  else
 		  {
-			  rc = pm8058_gpio_config(24, &sd_pwr_en_n_1); //SD_PWR_EN
+  		 	rc = gpio_tlmm_config(GPIO_CFG(58, 1, GPIO_CFG_OUTPUT,GPIO_CFG_NO_PULL, GPIO_CFG_16MA), GPIO_CFG_ENABLE);
+			if (rc) printk(KERN_ERR"MMC CLK PD ERROR \n");	
+		  	  //detect
+			  rc = pm8058_gpio_config(24, &sd_pwr_en_n_1); 
 			  if (rc) {
 				  pr_err("%s PMIC_GPIO_SD_PWR_EN_N config failed\n", __func__);
 				  return rc;
 		  	}
 		  	gpio_set_value_cansleep(PM8058_GPIO_PM_TO_SYS(24), 0); //Low Active
 		  }
+#endif		  
 
 	}
 

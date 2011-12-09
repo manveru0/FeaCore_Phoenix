@@ -131,51 +131,6 @@ struct workqueue_struct *lcd_det_wq;
 struct platform_device *plcdc_s6d16a0x22_panel_device;
 #endif
 
-/* brightness level informtion */
-#define MAX_BRIGHTNESS_VALUE 255
-#define MIN_BRIGHTNESS_VALUE 30
-#define DIM_BL	20
-#define MIN_BL	30
-#define MAX_BL	255
-#define MAX_GAMMA_VALUE	24	// we have 25 levels. -> 16 levels -> 24 levels
-#define MAX_BRT_STAGE (int)(sizeof(brt_table)/sizeof(struct brightness_level))
-
-struct brightness_level{
-    int platform_level;// Platform setting values
-    int driver_level;// Chip Setting values
-};
-
-struct brightness_level brt_table[] = {
- { 0,  5 }, // Off
- { 20, 7 }, // Dimming pulse 26(33-7) by HW
- { MIN_BRIGHTNESS_VALUE,  6 }, // Min pulse 27(33-6) by HW
- { 38,  7  }, 
- { 46,  8  }, 
- { 53,  9  }, 
- { 61,  10  }, 
- { 69,  11  }, 
- { 76,  12  }, 
- { 84,  13  },  
- { 92,  14  }, 
- { 99,  15  }, 
- { 107,  16  }, 
- { 115,  17  }, 
- { 122,  18  },
- { 130,  19  },
- { 138,  20  },
- { 145,  21  }, // default pulse 11(33-22) by HW
- { 155,  22  },
- { 165,  23  },
- { 175,  24  },
- { 185,  25  }, 
- { 195,  26  }, 
- { 205,  27  }, 
- { 215,  28  }, 
- { 225,  29  }, 
- { 235,  30  },
- { 245,  31  },
- { MAX_BRIGHTNESS_VALUE,  32 }, // Max pulse 1(33-32) by HW
-};
 #if 0 // CALLISTO-REV00A, minhyo
 #define WRPWD			0xF0
 #define POWCTL			0xF3
@@ -591,6 +546,8 @@ static int lcdc_s6d16a0x22_panel_off(struct platform_device *pdev)
 	return 0;
 }
 
+#if 1
+
 // brightness tuning
 #define MAX_BRIGHTNESS_LEVEL 255
 #define DFT_BRIGHTNESS_LEVEL 		141//151//129//170//158//120  // When we are booting, Application set brightness-leverl 140, Brightness-level 140 is mapped Backlight-level 34. 
@@ -611,8 +568,7 @@ static void lcdc_s6d16a0x22_set_brightness_in_blu(int level)
 	unsigned long irqflags;
 	int tune_level = level;
 	int pulse;
-	int i, j;
-	gpio_tlmm_config(GPIO_CFG(GPIO_BL_CTRL, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_2MA), GPIO_ENABLE);
+
 	// LCD should be turned on prior to backlight
 	if(s6d16a0x22_state.disp_initialized == FALSE && tune_level > 0)
 	{
@@ -656,74 +612,26 @@ static void lcdc_s6d16a0x22_set_brightness_in_blu(int level)
 			gpio_set_value(GPIO_BL_CTRL, 1);
 			udelay(3); 
 			lcd_brightness = MAX_BRIGHTNESS_IN_BLU;
-		}	
-	
-		//pulse = (lcd_brightness - tune_level + MAX_BRIGHTNESS_IN_BLU) % MAX_BRIGHTNESS_IN_BLU;
-		pulse =tune_level;
+		}
+			
+		pulse = (lcd_brightness - tune_level + MAX_BRIGHTNESS_IN_BLU) % MAX_BRIGHTNESS_IN_BLU;
+
 		spin_lock_irqsave(&bl_ctrl_irq_lock, irqflags);
-		int backlight_table[32][16] = {
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 0, 0, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 0, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 0, 1, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 1, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 1, 0, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 1, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 0, 1, 1, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 0, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 0, 0, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 0, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 1, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 1, 0, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 1, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 0, 1, 1, 1, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 0, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 0, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 0, 1, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 1, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 1, 0, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 1, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 0, 1, 1, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 0, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 0, 0, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 0, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 0, 1, 1 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 1, 0, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 1, 1, 0 },
-			{0, 1, 1, 1, 0, 0, 1, 0,    0, 0, 0, 1, 1, 1, 1, 1 },
-		};
 
-		gpio_set_value(GPIO_BL_CTRL, 1);
-		udelay(110);
-		gpio_set_value(GPIO_BL_CTRL, 0);
-      		udelay(500);
-		gpio_set_value(GPIO_BL_CTRL, 1);
-      		udelay(500);
-
-		for( i = 0 ; i < 16 ; i++){
-		if(backlight_table[tune_level][i]) {
-			gpio_set_value(GPIO_BL_CTRL, 0);
-                   udelay(100);
-                   gpio_set_value(GPIO_BL_CTRL, 1);
-			udelay(200);
-		} else {
-			gpio_set_value(GPIO_BL_CTRL, 0);
-                   udelay(200);
-			gpio_set_value(GPIO_BL_CTRL, 1);
-			udelay(100);
-		}                     
-		if(i == 7 || i == 15)
+		for(; pulse>0; pulse--)
 		{
 			gpio_set_value(GPIO_BL_CTRL, 0);
-			udelay(10);                                                  
+			udelay(3);
 			gpio_set_value(GPIO_BL_CTRL, 1);
-			udelay(10);                                                  
+			udelay(3);
 		}
-	}
+				
 		spin_unlock_irqrestore(&bl_ctrl_irq_lock, irqflags);
 		lcd_brightness = tune_level;
 	
 	}
 
+	
 	//TODO: unlock
 	spin_unlock(&bl_ctrl_lock);
 
@@ -732,31 +640,34 @@ static void lcdc_s6d16a0x22_set_brightness_in_blu(int level)
 static void lcdc_s6d16a0x22_set_backlight(struct msm_fb_data_type *mfd)
 {
 	int bl_level = mfd->bl_level;
-	int gamma_level = 0;
-	int i;
-	if(bl_level > 0){
-		if(bl_level < MIN_BRIGHTNESS_VALUE) {
-		/* dimming set */
-		gamma_level = brt_table[1].driver_level;
-		} 
-		else if (bl_level == MAX_BRIGHTNESS_VALUE) {
-			/* max brightness set */
-			gamma_level = brt_table[MAX_BRT_STAGE-1].driver_level;
-		} 
-		else {
-			for(i = 0; i < MAX_BRT_STAGE; i++) {
- 			if(bl_level <= brt_table[i].platform_level ) {
-				gamma_level = brt_table[i].driver_level;
-				break;
-				}
-			}
-		}
-	} else {
-	//   DPRINT("bl: %d \n",bl_level);
-		return;
+	int tune_level;
+
+		// brightness tuning
+	if(bl_level >= LOW_BRIGHTNESS_LEVEL)
+		tune_level = (bl_level - LOW_BRIGHTNESS_LEVEL) * (MAX_BACKLIGHT_VALUE-LOW_BACKLIGHT_VALUE) / (MAX_BRIGHTNESS_LEVEL-LOW_BRIGHTNESS_LEVEL) + LOW_BACKLIGHT_VALUE;
+	else if(bl_level > 0)
+		tune_level = DIM_BACKLIGHT_VALUE;
+	else
+		tune_level = bl_level;
+
+	DPRINT("%s:%d,%d\n", __func__, bl_level, tune_level);	
+
+		// turn on lcd if needed
+#ifdef __LCD_ON_EARLY__
+	if(tune_level > 0)
+	{
+		if(!s6d16a0x22_state.disp_powered_up)
+			s6d16a0x22_disp_powerup();
+		if(!s6d16a0x22_state.display_on)
+			s6d16a0x22_disp_on();
 	}
-		lcdc_s6d16a0x22_set_brightness_in_blu(gamma_level);
+#endif
+
+
+		lcdc_s6d16a0x22_set_brightness_in_blu(tune_level);
 }
+#endif
+
 
 #ifdef __LCD_CONTROL_BY_FILE__
 static int s3cfb_sysfs_show_lcd_power(struct device *dev, struct device_attribute *attr, char *buf)
@@ -880,8 +791,7 @@ static int __init s6d16a0x22_probe(struct platform_device *pdev)
 			printk("INT Settings complete\n");
 		}
 		#endif
-		gpio_tlmm_config(GPIO_CFG(GPIO_BL_CTRL, 0, GPIO_OUTPUT, GPIO_NO_PULL, GPIO_2MA), GPIO_ENABLE);
-
+		
 		return 0;
 	}
 

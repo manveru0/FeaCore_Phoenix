@@ -406,6 +406,13 @@ EXPORT_SYMBOL(multipdp_write);
 //struct class *sec_class;
 struct device *dpram_dev;
 
+#define POWER_DOWN_TIME ( 30 * HZ )
+struct device *pm_dev;
+void power_down_registertimer(struct timer_list* ptimer, unsigned long timeover );
+void power_down_timeout(unsigned long arg);
+struct timer_list power_down_timer;
+bool power_down;
+
 static ssize_t show_info(struct device *d,
 		struct device_attribute *attr, char *buf)
 {
@@ -514,8 +521,23 @@ static ssize_t store_whitelist(struct device *d,
 static DEVICE_ATTR(whitelist, S_IRUGO|S_IWUSR, NULL, store_whitelist);
 #endif
 
+static ssize_t store_power_down(struct device *d,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	int i;
+	char *after;
+	unsigned long value = simple_strtoul(buf, &after, 10);
 
+	if (value == 1)
+	{
+		printk("[dpram] %s(%d)\n", __func__, __LINE__);
+		power_down_registertimer(&power_down_timer, POWER_DOWN_TIME);	
+	}	
 
+	return count;
+}
+
+static DEVICE_ATTR(power_down, S_IRUGO|S_IWUSR, NULL, store_power_down);
 
 static int dpram_write(dpram_device_t *device,
 		const unsigned char *buf, int len)
@@ -1858,6 +1880,26 @@ int dump_enable_flag = 0;
 
 EXPORT_SYMBOL(dump_enable_flag);
 
+void power_down_registertimer(struct timer_list* ptimer, unsigned long timeover )
+{
+        printk("%s\n",__func__);
+        init_timer(ptimer);
+        ptimer->expires = get_jiffies_64() + timeover;
+        ptimer->data = (long) NULL;
+        ptimer->function = power_down_timeout;
+        add_timer(ptimer);
+}
+ 
+void power_down_timeout(unsigned long arg)
+{
+        printk("%s\n",__func__);
+        //smem_flag->info = 0xAEAEAEAE;
+        //msm_proc_comm_reset_modem_now();
+        power_down = true;
+        pm_power_off();
+}
+
+
 static int silent_read_proc_debug(char *page, char **start, off_t offset,
 		                    int count, int *eof, void *data)
 {
@@ -2034,6 +2076,13 @@ static int __init dpram_init(void)
 	if(device_create_file(dpram_dev, &dev_attr_whitelist) < 0)
 		pr_err("Failed to create device file(%s)!\n", dev_attr_whitelist.attr.name);
 #endif
+	pm_dev = device_create(sec_class, NULL, 0, NULL, "pm");
+	if(IS_ERR(pm_dev))
+		pr_err("Failed to create device(pm)!\n");
+	if(device_create_file(pm_dev, &dev_attr_info) < 0)
+		pr_err("Failed to create device file(%s)!\n", dev_attr_info.attr.name);
+	if(device_create_file(pm_dev, &dev_attr_power_down) < 0)
+		pr_err("Failed to create device file(%s)!\n", dev_attr_power_down.attr.name);
 error_return:
 
 	return ret;
