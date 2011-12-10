@@ -55,6 +55,7 @@ int param_n1stVun;
 char mBuf[PARAM_SIZE];
 //extern struct proc_dir_entry *fsr_proc_dir;
 
+struct file *filp;
 
 static ssize_t kernel_write(struct file *file, const char *buf, size_t count, loff_t pos)
 {
@@ -82,7 +83,7 @@ static int param_read_proc_debug(char *page, char **start, off_t offset, int cou
 {
 
 
-       struct file *filp;
+
 	PARAM efs;
 	char *dp;
 	long l;
@@ -90,12 +91,6 @@ static int param_read_proc_debug(char *page, char **start, off_t offset, int cou
 
 	printk("%s %d\n", __func__, __LINE__);
 
-
-       filp = filp_open("/dev/block/mmcblk0p14", O_RDWR, 0666);
-	if (IS_ERR(filp)) {
-		printk("file open error\n");
-		return;
-	}
 
 	*eof = 1;
 	memset(mBuf, 0xff, PARAM_SIZE);
@@ -113,7 +108,7 @@ static int param_read_proc_debug(char *page, char **start, off_t offset, int cou
 	printk("PARAM efs_info	  : %s\n",efs.efs_info);
 
 
-      filp_close(filp, current->files);
+   //   filp_close(filp, current->files);
 
 
 	return sprintf(page, "%s", efs.efs_info);
@@ -125,7 +120,7 @@ static int param_read_proc_debug(char *page, char **start, off_t offset, int cou
 static int param_write_proc_debug(struct file *file, const char *buffer,
 		                            unsigned long count, void *data)
 {
-       struct file *filp;
+
 	char *buf;
      	PARAM efs;
 	long l;
@@ -149,11 +144,7 @@ static int param_write_proc_debug(struct file *file, const char *buffer,
 	}
 
 
-	filp = filp_open("/dev/block/mmcblk0p14", O_RDWR, 0666);
-	if (IS_ERR(filp)) {
-		printk("file open error\n");
-		return;
-	}
+
 
 	memset(mBuf, 0xff, PARAM_SIZE);
 
@@ -180,7 +171,7 @@ static int param_write_proc_debug(struct file *file, const char *buffer,
 		return ret;
 	}
 
-      filp_close(filp, current->files);
+ //     filp_close(filp, current->files);
 
 	kfree(buf);
 	return count;
@@ -194,7 +185,7 @@ extern int (*set_recovery_mode)(void);
      
 int _set_recovery_mode(void)
 {
-       struct file *filp;
+
      	PARAM param;
 	long l;
 	int ret;
@@ -202,11 +193,7 @@ int _set_recovery_mode(void)
 	printk("%s %d\n", __func__, __LINE__);
 
 
-	filp = filp_open("/dev/block/mmcblk0p14", O_RDWR, 0666);
-	if (IS_ERR(filp)) {
-		printk("file open error\n");
-		return;
-	}
+
 
 	memset(mBuf, 0xff, PARAM_SIZE);
 
@@ -231,7 +218,7 @@ int _set_recovery_mode(void)
 	}
 
 
-      filp_close(filp, current->files);
+ //     filp_close(filp, current->files);
 
 	return 0;
 
@@ -255,6 +242,13 @@ static int __init param_init(void)
 	ent->write_proc = param_write_proc_debug;
 
 	set_recovery_mode = _set_recovery_mode;
+	
+		filp = filp_open("/dev/block/mmcblk0p14", O_RDWR, 0666);
+	if (IS_ERR(filp)) {
+		printk("js js js js js js file open error\n");
+		return;
+	}
+	
 
 	return 0;
 
@@ -265,6 +259,8 @@ static void __exit param_exit(void)
 
      
 	remove_proc_entry("efs_info", fsr_proc_dir);
+	
+	filp_close(filp, current->files);
 
 }
 
