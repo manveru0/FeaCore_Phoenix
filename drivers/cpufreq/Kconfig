@@ -203,4 +203,12 @@ config CPU_FREQ_GOV_SMARTASS2
 	  help
 	      'smartassV2' - a "smart" optimized governor!
 
+config CPU_FREQ_VDD_LEVELS
+	  bool "CPU Vdd levels sysfs interface"
+	  depends on CPU_FREQ_STAT
+	  depends on ARCH_MSM7X30
+	  default n
+	  help
+	      CPU Vdd levels sysfs interface
+
 endif	# CPU_FREQ
